@@ -258,7 +258,7 @@ By following this approach, you can efficiently update a large table (table A) u
 ## JAVA OPTION**:
 Certainly! You can use Java multithreading to update a large table with data from a smaller table in an Oracle database. The following example demonstrates how to achieve this using JDBC with multiple threads.
 
-### Java Multithreading Example
+### Option-1: Java Multithreading Example
 
 1. **Create a Task for Updating Records**:
    Create a `Runnable` task that updates a batch of records.
@@ -386,6 +386,144 @@ public class MultiThreadedUpdate {
    - Commits the transaction after processing each batch.
 
 By using this approach, you can efficiently update a large table using multithreading in Java, which helps to parallelize the workload and improve performance.
+
+### Improved Java Multithreading Example
+
+Certainly! Below is an improved Java example using multithreading to update table A with data from table B. This example uses a thread pool to manage threads efficiently and perform the update in batches to improve performance and resource utilization.
+
+#### Prerequisites
+
+1. **JDBC Driver**: Ensure you have the Oracle JDBC driver in your classpath.
+2. **Database Connection**: Update the database connection details accordingly.
+
+### Step-by-Step Code
+
+1. **Dependencies**: Make sure you have the necessary dependencies in your project, especially the Oracle JDBC driver.
+
+2. **Main Class**: This class will manage the thread pool and initiate the update process.
+
+#### Main Class
+```java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class UpdateTableA {
+
+    private static final String DB_URL = "jdbc:oracle:thin:@your_oracle_host:your_oracle_port:your_oracle_db";
+    private static final String DB_USER = "your_username";
+    private static final String DB_PASSWORD = "your_password";
+    private static final int BATCH_SIZE = 1000; // Adjust batch size as needed
+    private static final int THREAD_POOL_SIZE = 10; // Adjust thread pool size as needed
+
+    public static void main(String[] args) {
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String selectQuery = "SELECT id, r, t, y FROM tableB";
+            PreparedStatement selectStmt = connection.prepareStatement(selectQuery, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+            selectStmt.setFetchSize(BATCH_SIZE);
+
+            ResultSet rs = selectStmt.executeQuery();
+            int count = 0;
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String r = rs.getString("r");
+                String t = rs.getString("t");
+                String y = rs.getString("y");
+
+                executor.submit(new UpdateTask(id, r, t, y));
+
+                if (++count % BATCH_SIZE == 0) {
+                    executor.submit(new CommitTask());
+                }
+            }
+
+            // Submit a final commit task if there are remaining records
+            if (count % BATCH_SIZE != 0) {
+                executor.submit(new CommitTask());
+            }
+
+            rs.close();
+            selectStmt.close();
+
+            // Shutdown the executor service gracefully
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.HOURS);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    static class UpdateTask implements Runnable {
+        private int id;
+        private String r;
+        private String t;
+        private String y;
+
+        public UpdateTask(int id, String r, String t, String y) {
+            this.id = id;
+            this.r = r;
+            this.t = t;
+            this.y = y;
+        }
+
+        @Override
+        public void run() {
+            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+                String updateQuery = "UPDATE tableA SET q = ?, w = ?, e = ? WHERE id = ?";
+                PreparedStatement updateStmt = connection.prepareStatement(updateQuery);
+
+                updateStmt.setString(1, r);
+                updateStmt.setString(2, t);
+                updateStmt.setString(3, y);
+                updateStmt.setInt(4, id);
+
+                updateStmt.executeUpdate();
+                updateStmt.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    static class CommitTask implements Runnable {
+
+        @Override
+        public void run() {
+            try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+                connection.commit();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+### Explanation
+
+1. **ExecutorService**: We use a fixed thread pool to manage the threads efficiently.
+2. **Batch Processing**: The `BATCH_SIZE` determines the number of records processed in each batch. The `THREAD_POOL_SIZE` controls the number of concurrent threads.
+3. **Fetching Data**: Data is fetched from table B in batches using a `SELECT` query.
+4. **UpdateTask**: Each `UpdateTask` updates a single record in table A. The tasks are submitted to the thread pool for parallel execution.
+5. **CommitTask**: The `CommitTask` commits the transaction after each batch of updates. This ensures that changes are periodically saved to the database, reducing the risk of losing all updates if an error occurs.
+6. **Graceful Shutdown**: The executor service is shut down gracefully, ensuring all tasks are completed before the program exits.
+
+### Additional Considerations
+
+1. **Connection Pooling**: For better performance, consider using a connection pool (e.g., HikariCP) instead of creating a new connection for each task.
+2. **Error Handling**: Implement more robust error handling and logging mechanisms to capture and handle exceptions effectively.
+3. **Performance Tuning**: Adjust the `BATCH_SIZE` and `THREAD_POOL_SIZE` according to your environment and performance requirements.
+
+This Java example demonstrates a scalable approach to updating a large table using multithreading, ensuring efficient use of resources and improved performance.
 
 ## TALEND OPTION**:
 I apologize for the confusion earlier. Let's provide a clear example using `tFlowToIterate` in Talend for batch processing.
