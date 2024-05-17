@@ -5,7 +5,6 @@ Updating a large table in Oracle with data from a smaller table can be challengi
 ## ORACLE OPTION **
 
 ### Option -1: MERE Statement
-Here’s an optimized approach to update table A with data from table B:
 
 1. **Use a MERGE Statement**:
    The `MERGE` statement is optimized for such operations and can handle large datasets more efficiently.
@@ -110,7 +109,6 @@ UPDATE SET
 
 - **Space Management**: Ensure there is sufficient tablespace to accommodate the updates, especially if your table is very large.
 
-By following these steps and optimizing for your specific environment, you can achieve a more efficient update operation.
 
 ### Option -2: Using Cursor with `FORALL`
 
@@ -253,10 +251,8 @@ END;
 6. **Final Commit**:
    - Ensure a final commit is executed after processing all the batches to make sure all changes are saved.
 
-By following this approach, you can efficiently update a large table (table A) using data from a smaller table (table B) while optimizing performance and minimizing resource contention.
 
 ## JAVA OPTION**:
-Certainly! You can use Java multithreading to update a large table with data from a smaller table in an Oracle database. The following example demonstrates how to achieve this using JDBC with multiple threads.
 
 ### Option-1: Java Multithreading Example
 
@@ -388,8 +384,6 @@ public class MultiThreadedUpdate {
 By using this approach, you can efficiently update a large table using multithreading in Java, which helps to parallelize the workload and improve performance.
 
 ### Improved Java Multithreading Example
-
-Certainly! Below is an improved Java example using multithreading to update table A with data from table B. This example uses a thread pool to manage threads efficiently and perform the update in batches to improve performance and resource utilization.
 
 #### Prerequisites
 
@@ -523,10 +517,8 @@ public class UpdateTableA {
 2. **Error Handling**: Implement more robust error handling and logging mechanisms to capture and handle exceptions effectively.
 3. **Performance Tuning**: Adjust the `BATCH_SIZE` and `THREAD_POOL_SIZE` according to your environment and performance requirements.
 
-This Java example demonstrates a scalable approach to updating a large table using multithreading, ensuring efficient use of resources and improved performance.
 
 ## TALEND OPTION**:
-I apologize for the confusion earlier. Let's provide a clear example using `tFlowToIterate` in Talend for batch processing.
 
 ### Step-by-Step Guide for Batch Processing in Talend
 
